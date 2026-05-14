@@ -20,7 +20,6 @@ pip install docforge[all]        # Everything
 ```python
 from docforge import DocumentGenerator, Theme
 
-# Custom theme
 theme = Theme(
     brand_name="Acme Corp",
     primary="#3B82F6",
@@ -29,12 +28,17 @@ theme = Theme(
 
 gen = DocumentGenerator(theme=theme)
 
-# Generate PDF from markdown
 gen.create_pdf(
     "report.pdf",
     title="Q1 Report",
     content="## Summary\n\nRevenue increased **15%** year-over-year.",
-    metadata={"author": "Jane Doe", "organization": "Acme Corp"},
+    metadata={
+        "author": "Jane Doe",
+        "organization": "Acme Corp",
+        "client": "Client Name",        # Shows on cover as "Prepared for:"
+        "document_type": "report",       # Cover page label
+        "location": "Detroit, Michigan",
+    },
 )
 ```
 
@@ -42,7 +46,8 @@ gen.create_pdf(
 
 - **Configurable themes** — Colors, fonts, margins, branding
 - **Professional PDF generation** — Cover pages, headers, footers, page numbers
-- **Markdown parsing** — Headings, bold, italic, code, lists, horizontal rules
+- **Markdown parsing** — Headings, bold, italic, code, lists, tables, horizontal rules
+- **Invoice generation** — Branded invoices with line items, totals, payment terms
 - **Word document generation** — Structured sections with metadata tables
 - **Multi-format chat export** — TXT, PDF, CSV, XLSX with styled output
 - **Component library** — Reusable flowables for custom document layouts
@@ -67,6 +72,102 @@ theme = Theme(
 )
 ```
 
+## Document Types
+
+The `document_type` metadata key controls the cover page label. Supported types:
+
+`business_plan`, `grant_application`, `marketing_plan`, `financial_projection`,
+`executive_summary`, `pitch_deck`, `report`, `proposal`, `whitepaper`
+
+## Cover Page Metadata
+
+The `metadata` dict controls what appears on the cover page:
+
+| Key | Cover Page Line | Notes |
+|-----|----------------|-------|
+| `client` | **Prepared for:** | Client name. Falls back to `organization` if not set. |
+| `organization` | *(fallback for Prepared for)* | Your org name. |
+| `author` | **Prepared by:** | Falls back to `theme.brand_name`. |
+| `location` | **Location:** | Optional. |
+| `document_type` | *(top label)* | See supported types above. |
+
+## Invoices
+
+Generate branded invoices with itemized charges, totals, and payment terms:
+
+```python
+from docforge.invoice import InvoiceData, InvoiceLineItem, generate_invoice
+from docforge.theme import Theme
+
+theme = Theme(
+    brand_name="Acme Corp",
+    primary="#14B8A6",
+    footer_text="© 2026 Acme Corp",
+)
+
+invoice = InvoiceData(
+    invoice_number="INV-2026-001",
+    issue_date="June 1, 2026",
+    due_date="June 14, 2026",
+    project="Website Redesign",
+    client_name="Jane Smith",
+    business_name="Smith & Co",
+    client_location="Detroit, Michigan",
+    items=[
+        InvoiceLineItem(description="Monthly website services", amount=175.00),
+        InvoiceLineItem(description="Domain management", amount=0, included=True),
+    ],
+    notes=["Covers June 2026 services."],
+    payment_methods=["Cash App, PayPal, bank transfer."],
+    remittance_notes=["Please reference INV-2026-001 with payment."],
+)
+
+generate_invoice("invoice.pdf", invoice, theme=theme)
+```
+
+### Reusable Invoice CLI
+
+For HLN agency use, the `generate_care_plan_invoice.py` script handles both build
+installments and care plan invoices from the command line:
+
+```bash
+# Build installment
+python3 scripts/generate_care_plan_invoice.py \
+  --client "Client Name" \
+  --business "Business Name" \
+  --invoice-number HLN-INV-2026-005 \
+  --month "June 2026" \
+  --type build --amount 175 --installment "2 of 4"
+
+# Care plan (essential | growth | authority)
+python3 scripts/generate_care_plan_invoice.py \
+  --client "Client Name" \
+  --business "Business Name" \
+  --invoice-number HLN-INV-2026-008 \
+  --month "September 2026" \
+  --type care --plan growth
+```
+
+Care plan tiers and their rates:
+
+| Plan | Monthly | Includes |
+|------|---------|----------|
+| Essential | $75 | Hosting, monitoring, minor edits, form reliability |
+| Growth | $150 | + Content updates, Google Business Profile, analytics, priority support |
+| Authority | $300 | + Integrations, automation, consulting hours, performance optimization |
+
+## Markdown Support
+
+The `parse_markdown_content` renderer handles:
+
+- `# H1` / `## H2` / `### H3` — section and subsection headers
+- `**bold**` / `*italic*` / `***both***` — inline formatting
+- `- item` or `* item` — bullet lists
+- `1. item` — numbered lists
+- `---` / `***` / `___` — horizontal rules (rendered as themed dividers)
+- `**Bold Header:**` — auto-detected subsection headers
+- Markdown tables with `| col | col |` syntax — rendered as themed tables with headers
+
 ## Chat Export
 
 Export conversations to multiple formats:
@@ -81,9 +182,26 @@ messages = [
 
 metadata = ExportMetadata(title="Support Chat", brand_name="Acme Corp")
 
-# Export to any supported format
 ChatExportService.export(messages, metadata, fmt="pdf", export_dir="./exports")
 ChatExportService.export(messages, metadata, fmt="xlsx", export_dir="./exports")
+```
+
+## Project Structure
+
+```
+docforge/
+├── src/docforge/
+│   ├── generator.py        # High-level DocumentGenerator API
+│   ├── invoice.py          # Invoice generation (InvoiceData + generate_invoice)
+│   ├── theme.py            # Theme class, styles, table styles
+│   ├── pdf/
+│   │   ├── components.py   # Flowables: cover page, sections, lists, tables, markdown
+│   │   └── document.py     # ForgeDocument / SimpleForgeDocument wrappers
+│   ├── word/               # Word (.docx) generation
+│   └── export/             # Chat export (TXT, PDF, CSV, XLSX)
+├── scripts/                # HLN agency invoice/proposal generators
+├── examples/               # Example usage scripts
+└── tests/                  # Test suite
 ```
 
 ## License

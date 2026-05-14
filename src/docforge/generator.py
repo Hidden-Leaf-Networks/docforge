@@ -88,6 +88,7 @@ class DocumentGenerator:
             location=meta.get("location", ""),
             tagline=self.theme.footer_text,
             theme=self.theme,
+            client=meta.get("client", ""),
         )
 
         self._add_content(story, content)

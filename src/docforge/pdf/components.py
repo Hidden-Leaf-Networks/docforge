@@ -66,6 +66,7 @@ def cover_page(
     location: str = "",
     tagline: str = "",
     theme: Theme | None = None,
+    client: str = "",
 ) -> None:
     """Build a professional cover page.
 
@@ -80,6 +81,7 @@ def cover_page(
         location: Optional location string.
         tagline: Optional tagline for bottom of cover.
         theme: Theme for accent divider.
+        client: Client name for "Prepared for" line. Falls back to organization.
     """
     t = theme or DEFAULT_THEME
 
@@ -88,7 +90,8 @@ def cover_page(
     story.append(Paragraph(title, styles["CoverTitle"]))
     story.append(accent_divider(t, thickness=3, space_before=8, space_after=20))
 
-    story.append(Paragraph(f"<b>Prepared for:</b> {organization}", styles["Meta"]))
+    prepared_for = client or organization
+    story.append(Paragraph(f"<b>Prepared for:</b> {prepared_for}", styles["Meta"]))
     if location:
         story.append(Paragraph(f"<b>Location:</b> {location}", styles["Meta"]))
     story.append(Spacer(1, 0.3 * inch))
@@ -249,13 +252,69 @@ def parse_markdown_content(
             list_items = []
         list_type = None
 
+    table_rows: list[list[str]] = []
+
+    def flush_table():
+        nonlocal table_rows
+        if not table_rows:
+            return
+        # Filter out separator rows (e.g., |---|---|)
+        data_rows = [
+            r for r in table_rows
+            if not all(re.match(r"^[-:]+$", cell.strip()) for cell in r)
+        ]
+        if len(data_rows) < 1:
+            table_rows = []
+            return
+
+        t = theme or DEFAULT_THEME
+        cell_style = styles["Body"].clone("MDTableCell")
+        cell_style.fontSize = 9.5
+        cell_style.spaceAfter = 0
+        cell_style.alignment = 0  # TA_LEFT
+
+        num_cols = max(len(row) for row in data_rows)
+        # Pad rows to equal column count
+        padded = [row + [""] * (num_cols - len(row)) for row in data_rows]
+        # Wrap cells in Paragraphs for text wrapping and inline formatting
+        wrapped = []
+        for row in padded:
+            wrapped.append([
+                Paragraph(convert_markdown_inline(cell.strip()), cell_style)
+                for cell in row
+            ])
+
+        avail_width = 6.3 * inch
+        col_width = avail_width / num_cols
+        col_widths = [col_width] * num_cols
+
+        md_table = Table(wrapped, colWidths=col_widths)
+        md_table.setStyle(TableStyle(simple_table_style(t)))
+        story.append(md_table)
+        story.append(Spacer(1, 0.15 * inch))
+        table_rows = []
+
     for line in lines:
         stripped = line.strip()
 
         if not stripped:
             flush_paragraph()
             flush_list()
+            if table_rows:
+                flush_table()
             continue
+
+        # Markdown table row (starts and ends with |, or contains | separators)
+        if stripped.startswith("|") and stripped.endswith("|"):
+            flush_paragraph()
+            flush_list()
+            cells = [c.strip() for c in stripped.strip("|").split("|")]
+            table_rows.append(cells)
+            continue
+
+        # If we were accumulating table rows but hit a non-table line, flush
+        if table_rows:
+            flush_table()
 
         # Horizontal rule
         if stripped in ("---", "***", "___"):
@@ -304,3 +363,4 @@ def parse_markdown_content(
 
     flush_paragraph()
     flush_list()
+    flush_table()
