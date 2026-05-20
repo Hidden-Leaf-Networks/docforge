@@ -7,7 +7,7 @@ name = "docforge"
 version = "0.1.0"
 description = "Professional document generation with configurable theming — PDF, Word, and multi-format export"
 readme = "README.md"
-license = {text = "MIT"}
+license = {text = "Apache-2.0"}
 requires-python = ">=3.10"
 authors = [{name = "Hidden Leaf Networks"}]
 
