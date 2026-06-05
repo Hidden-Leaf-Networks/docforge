@@ -7,7 +7,7 @@ Built by Hidden Leaf Networks.
 
 __version__ = "0.1.0"
 
-from docforge.theme import Theme, build_styles, DEFAULT_THEME
+from docforge.theme import Theme, build_styles, build_resume_styles, DEFAULT_THEME
 from docforge.pdf.document import ForgeDocument, SimpleForgeDocument
 from docforge.pdf.components import (
     cover_page,
@@ -21,6 +21,7 @@ from docforge.pdf.components import (
     add_callout,
     accent_divider,
     parse_markdown_content,
+    parse_resume_content,
 )
 from docforge.generator import DocumentGenerator
 
@@ -28,6 +29,7 @@ __all__ = [
     # Theme
     "Theme",
     "build_styles",
+    "build_resume_styles",
     "DEFAULT_THEME",
     # PDF
     "ForgeDocument",
@@ -45,4 +47,5 @@ __all__ = [
     "add_callout",
     "accent_divider",
     "parse_markdown_content",
+    "parse_resume_content",
 ]

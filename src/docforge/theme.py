@@ -221,6 +221,106 @@ def build_styles(theme: Theme | None = None) -> dict[str, ParagraphStyle]:
     return styles
 
 
+def build_resume_styles(theme: Theme | None = None) -> dict[str, ParagraphStyle]:
+    """Build tight paragraph styles optimized for 1-2 page resumes."""
+    t = theme or DEFAULT_THEME
+    base = getSampleStyleSheet()
+    styles: dict[str, ParagraphStyle] = {}
+
+    styles["Body"] = ParagraphStyle(
+        "ResumeBody",
+        parent=base["BodyText"],
+        fontName=t.font_body,
+        fontSize=9,
+        leading=11.5,
+        textColor=t.text_dark_color,
+        spaceAfter=2,
+        alignment=TA_JUSTIFY,
+    )
+
+    # Name at top — big and bold
+    styles["H1"] = ParagraphStyle(
+        "ResumeName",
+        parent=base["Heading1"],
+        fontName=t.font_heading,
+        fontSize=24,
+        leading=28,
+        textColor=t.text_dark_color,
+        spaceAfter=2,
+        alignment=TA_CENTER,
+    )
+
+    # Section headers (PROFESSIONAL EXPERIENCE, CORE CAPABILITIES, etc.)
+    styles["H2"] = ParagraphStyle(
+        "ResumeSection",
+        parent=base["Heading2"],
+        fontName=t.font_heading,
+        fontSize=10.5,
+        leading=13,
+        textColor=t.primary_color,
+        spaceBefore=6,
+        spaceAfter=1,
+    )
+
+    # Job titles / subsection headers
+    styles["H3"] = ParagraphStyle(
+        "ResumeSubsection",
+        parent=base["Heading3"],
+        fontName=t.font_heading,
+        fontSize=9.5,
+        leading=12,
+        textColor=t.text_dark_color,
+        spaceBefore=4,
+        spaceAfter=0,
+    )
+
+    # Subtitle line (role tagline under name)
+    styles["Subtitle"] = ParagraphStyle(
+        "ResumeSubtitle",
+        parent=base["BodyText"],
+        fontName=t.font_heading,
+        fontSize=10,
+        leading=13,
+        textColor=t.primary_color,
+        alignment=TA_CENTER,
+        spaceAfter=2,
+    )
+
+    # Contact info line
+    styles["Contact"] = ParagraphStyle(
+        "ResumeContact",
+        parent=base["BodyText"],
+        fontName=t.font_body,
+        fontSize=9,
+        leading=11,
+        textColor=t.text_gray_color,
+        alignment=TA_CENTER,
+        spaceAfter=2,
+    )
+
+    # Employer/date line under job title
+    styles["Meta"] = ParagraphStyle(
+        "ResumeMeta",
+        parent=base["BodyText"],
+        fontName=t.font_body,
+        fontSize=8.5,
+        leading=10.5,
+        textColor=t.text_gray_color,
+        spaceAfter=1,
+    )
+
+    # Tight bullet points
+    styles["Bullet"] = ParagraphStyle(
+        "ResumeBullet",
+        parent=styles["Body"],
+        leftIndent=14,
+        bulletIndent=6,
+        spaceAfter=1,
+    )
+
+    return styles
+
+
 def table_style(theme: Theme | None = None) -> list:
     """Professional table style with themed header."""
     t = theme or DEFAULT_THEME

@@ -8,3 +8,7 @@ build/
 .pytest_cache/
 .env
 *.pdf
+
+# Internal scripts — client invoices, proposals, proprietary templates
+# These live in the private Bitbucket fork only
+scripts/

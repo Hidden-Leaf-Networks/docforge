@@ -18,11 +18,12 @@ from docforge.pdf.components import (
     accent_divider,
     cover_page,
     parse_markdown_content,
+    parse_resume_content,
     section_header,
     subsection_header,
 )
 from docforge.pdf.document import ForgeDocument, SimpleForgeDocument
-from docforge.theme import DEFAULT_THEME, Theme, build_styles
+from docforge.theme import DEFAULT_THEME, Theme, build_styles, build_resume_styles
 
 
 # Document type labels
@@ -92,6 +93,43 @@ class DocumentGenerator:
         )
 
         self._add_content(story, content)
+        doc.build(story)
+        return filepath
+
+    def create_resume_pdf(
+        self,
+        filepath: str,
+        name: str,
+        subtitle: str,
+        contact: str,
+        content: str,
+    ) -> str:
+        """Create a professional resume PDF with tight spacing.
+
+        Args:
+            filepath: Output file path.
+            name: Full name (displayed large at top).
+            subtitle: Role tagline (e.g., "SOFTWARE ENGINEER | MANUFACTURING").
+            contact: Contact info line.
+            content: Markdown body content (## sections, ### job titles, bullets).
+
+        Returns:
+            The filepath written to.
+        """
+        styles = build_resume_styles(self.theme)
+        doc = SimpleForgeDocument(filepath, theme=self.theme)
+        story: list = []
+
+        # Header block — name, subtitle, contact, divider
+        story.append(Paragraph(name, styles["H1"]))
+        story.append(Paragraph(subtitle, styles["Subtitle"]))
+        story.append(Paragraph(contact, styles["Contact"]))
+        story.append(accent_divider(self.theme, thickness=2, space_before=4, space_after=6))
+
+        # Body content with resume-tight parsing
+        if content:
+            parse_resume_content(content, story, styles, theme=self.theme)
+
         doc.build(story)
         return filepath
 

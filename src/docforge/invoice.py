@@ -315,7 +315,7 @@ def generate_invoice(
     closing_style.fontSize = 10
     closing_style.textColor = t.text_gray_color
     story.append(Paragraph(
-        "<i>Thank you for choosing Hidden Leaf Networks LLC.</i>",
+        f"<i>Thank you for choosing {t.brand_name}.</i>",
         closing_style,
     ))
 

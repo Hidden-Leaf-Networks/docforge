@@ -203,6 +203,102 @@ def add_callout(story: list, styles: dict, text: str) -> None:
 # ---------------------------------------------------------------------------
 
 
+def parse_resume_content(
+    content: str,
+    story: list,
+    styles: dict,
+    theme: Theme | None = None,
+) -> None:
+    """Parse markdown content with tight resume spacing.
+
+    Like parse_markdown_content but:
+    - No page breaks on ## headers
+    - Minimal divider spacing
+    - Treats standalone non-bullet paragraphs after ### as meta lines (employer/date)
+    """
+    lines = content.split("\n")
+    current_paragraph: list[str] = []
+    list_items: list[str] = []
+    last_was_h3 = False
+
+    def flush_paragraph():
+        nonlocal current_paragraph, last_was_h3
+        if current_paragraph:
+            text = " ".join(current_paragraph).strip()
+            if text:
+                text = convert_markdown_inline(text)
+                # Line right after a job title = employer/date meta
+                if last_was_h3:
+                    story.append(Paragraph(text, styles.get("Meta", styles["Body"])))
+                else:
+                    story.append(Paragraph(text, styles["Body"]))
+            current_paragraph = []
+        last_was_h3 = False
+
+    def flush_list():
+        nonlocal list_items
+        if list_items:
+            formatted = [convert_markdown_inline(item) for item in list_items]
+            for item in formatted:
+                story.append(Paragraph(f"<bullet>&bull;</bullet> {item}", styles["Bullet"]))
+            list_items = []
+
+    for line in lines:
+        stripped = line.strip()
+
+        if not stripped:
+            flush_paragraph()
+            flush_list()
+            continue
+
+        # Horizontal rule — thin divider, tight spacing
+        if stripped in ("---", "***", "___"):
+            flush_paragraph()
+            flush_list()
+            story.append(accent_divider(theme, thickness=1.5, space_before=3, space_after=3))
+            continue
+
+        header_text = stripped.lstrip("#").strip().replace("**", "")
+
+        if stripped.startswith("### "):
+            flush_paragraph()
+            flush_list()
+            # Job title — tight, no extra spacers
+            story.append(Paragraph(header_text, styles["H3"]))
+            last_was_h3 = True
+        elif stripped.startswith("## "):
+            flush_paragraph()
+            flush_list()
+            # Section header with tight accent divider, NO page break
+            story.append(Paragraph(header_text, styles["H2"]))
+            story.append(accent_divider(theme, thickness=1.5, space_before=1, space_after=4))
+        elif stripped.startswith("# "):
+            flush_paragraph()
+            flush_list()
+            story.append(Paragraph(header_text, styles["H1"]))
+        elif stripped.startswith("- ") or stripped.startswith("* "):
+            flush_paragraph()
+            last_was_h3 = False
+            list_items.append(stripped[2:])
+        elif re.match(r"^\d+[.)]\s", stripped):
+            flush_paragraph()
+            last_was_h3 = False
+            list_items.append(re.sub(r"^\d+[.)]\s*", "", stripped))
+        else:
+            flush_list()
+            # Check for bold standalone lines (used as inline subheaders in capabilities)
+            bold_header_match = re.match(r"^\*\*([^*]+)\*\*:?\s*$", stripped)
+            if bold_header_match:
+                flush_paragraph()
+                last_was_h3 = False
+                story.append(Paragraph(f"<b>{bold_header_match.group(1).strip()}</b>", styles["H3"]))
+            else:
+                current_paragraph.append(stripped)
+
+    flush_paragraph()
+    flush_list()
+
+
 def convert_markdown_inline(text: str) -> str:
     """Convert inline markdown to ReportLab XML tags.
 
