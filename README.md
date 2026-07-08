@@ -4,6 +4,21 @@
 
 Built by [Hidden Leaf Networks](https://hiddenleafnetworks.com).
 
+> This repository also serves as a technical writing portfolio, demonstrating documentation for installation, quick-start workflows, developer usage, theming, markdown support, troubleshooting, and release communication.
+
+## Documentation
+
+| Guide | Description |
+|-------|-------------|
+| [Quick Start](docs/quick-start.md) | Zero to first PDF in under 5 minutes |
+| [Invoice Generation](docs/invoice-generation.md) | Step-by-step branded invoice tutorial |
+| [Theming Guide](docs/theming-guide.md) | Colors, fonts, margins, and brand presets |
+| [Markdown Support](docs/markdown-support.md) | Supported syntax and known limitations |
+| [API Reference](docs/api-reference.md) | Complete class and method documentation |
+| [Troubleshooting](docs/troubleshooting.md) | Common issues and solutions |
+| [Release Notes](docs/release-notes.md) | Version history |
+| [Case Study](docs/case-study.md) | How DocForge was designed and deployed |
+
 ## Installation
 
 ```bash
